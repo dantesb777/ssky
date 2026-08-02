@@ -63,8 +63,9 @@ command, not of the flags:
   today; defining one is #82.
 - Human-readable formats write errors to **stderr**. JSON formats write errors to
   **stdout** — see [Known divergences](#known-divergences) and #83.
-- A closed downstream pipe is caught (`BrokenPipeError` in `main.execute()`) and produces
-  no traceback, but the resulting exit code varies with payload size — see #84.
+- A closed downstream pipe (`ssky … | head`) restores default `SIGPIPE` handling and
+  exits with `128 + SIGPIPE` (typically `141`) without a traceback. `BrokenPipeError`
+  in the entry point is handled the same way as a fallback.
 
 ## 4. The matrix
 
@@ -333,7 +334,7 @@ deltas to work through.
 | --- | --- | --- | --- |
 | 1 | `--thread` refuses `-J`/`-S` | structured output for threads | #80, #81 |
 | 2 | Errors go to stdout under `-J`/`-S` | payload-only stdout, or an explicit documented exception | #83 |
-| 3 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | one documented code | #82, #84 |
+| 3 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | exit `128+SIGPIPE` (typically 141), no traceback | #84 |
 | 4 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
 | 5 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
 | 6 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |

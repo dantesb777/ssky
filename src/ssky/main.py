@@ -137,15 +137,27 @@ def execute(subcommand, args) -> bool:
         print(e, file=sys.stderr)
         return False
     except BrokenPipeError:
-        devnull = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull, sys.stdout.fileno())
-        return False
+        # Quiet exit for environments where SIGPIPE is not delivered as a
+        # signal (for example when stdout is a TextIOWrapper). Convention:
+        # 128 + SIGPIPE (typically 141).
+        try:
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+        except Exception:
+            pass
+        code = 128 + int(getattr(signal, "SIGPIPE", 13))
+        raise SystemExit(code)
     except Exception as e:
         print(str(e), file=sys.stderr)
         return False
 
 def setup():
     signal.signal(signal.SIGINT, lambda num, frame: sys.exit(1))
+    # Restore default SIGPIPE so a closed downstream pipe exits like other
+    # Unix CLIs (128 + SIGPIPE) instead of raising BrokenPipeError with a
+    # traceback at interpreter shutdown.
+    if hasattr(signal, "SIGPIPE"):
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
     sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=False)
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', line_buffering=False)
@@ -159,9 +171,16 @@ def setup():
 
 def main() -> int:
     setup()
-    subcommand, args = parse()
-    status = execute(subcommand, args)
-    return 0 if status is True else 1
+    try:
+        subcommand, args = parse()
+        status = execute(subcommand, args)
+        return 0 if status is True else 1
+    except BrokenPipeError:
+        try:
+            sys.stdout.close()
+        except Exception:
+            pass
+        return 128 + int(getattr(signal, "SIGPIPE", 13))
 
 if __name__ == '__main__':
     sys.exit(main())
