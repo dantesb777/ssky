@@ -146,7 +146,7 @@ ssky get --thread --output ./threads
 ```
 
 **Thread Output Formatting:**
-- **Short/ID format** (`-S`, `-I`): Reply lines prefixed with `"| "`
+- **Short/ID format** (no flag, `-I`): Reply lines prefixed with `"| "`
 - **Long/Text format** (`-L`, `-T`): Posts within thread separated by `"|"`, independent threads by `"----------------"`
 - **JSON/simple-json**: Cannot be used with `--thread` (returns error)
 

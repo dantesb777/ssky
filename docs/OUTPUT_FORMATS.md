@@ -29,8 +29,9 @@ parser, so every subcommand accepts the same set.
 | `-T` | `--text` | `text` | Text |
 | *(none)* | | `''` | Short |
 
-`-S` is **Simple JSON**. The README's thread-formatting section calls `-S` "Short", which
-is incorrect (#77).
+`-S` is **Simple JSON**; Short has no flag of its own and is what you get when no format
+flag is given. `tests/test_format_flags.py` pins this mapping so the documentation cannot
+drift away from the parser again (#77).
 
 Two more options affect output:
 
