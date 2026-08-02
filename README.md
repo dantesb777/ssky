@@ -169,6 +169,10 @@ ssky get --simple-json
 ssky get --output ./posts
 ```
 
+📖 **[Output format specification](docs/OUTPUT_FORMATS.md)** — exactly what each format
+emits for each kind of result: field sets, delimiters, escaping, empty results, and error
+behavior. Read this before scripting against ssky output.
+
 #### Facets Metadata in Simple-JSON
 
 The `--simple-json` format includes structured facets metadata for rich text features:
