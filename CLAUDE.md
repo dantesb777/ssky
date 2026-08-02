@@ -53,6 +53,11 @@ All command functions return a result object with a `.print(format, output, deli
 method. Output formats: `id` (-I), `json` (-J), `long` (-L), `simple_json` (-S),
 `text` (-T), short (default).
 
+**`docs/OUTPUT_FORMATS.md` is the normative spec** for every (result type, format) pair —
+field sets, delimiters, escaping, empty results, errors. Change it before changing output,
+not after, and check its "Known divergences" table before assuming current behavior is
+intended.
+
 ### MCP server (`src/ssky_mcp/server.py`)
 FastMCP server. **Each tool shells out to the `ssky` CLI via `subprocess`**, not Python
 imports — so CLI and MCP behavior are guaranteed identical and a CLI fix is inherited
