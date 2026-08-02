@@ -442,6 +442,54 @@ class TestPostDeleteSequential:
         assert len(mentions_empty) == 0
 
 
+class TestTagDetection:
+    """Tag detection follows the @atproto/api rules (issue #68)."""
+
+    def tag_names(self, message):
+        return [item['name'] for item in get_tags(message).values()]
+
+    def test_mid_word_hash_is_not_a_tag(self):
+        """A '#' not preceded by whitespace never starts a tag"""
+        # The reported case: without spaces between words, the runaway tag ran
+        # from '#' to the URL and blew past the 64-grapheme limit
+        message = "情報提供依頼（RFI#1、2027年度向け）として、3D都市モデルの整備・活用に関する知見を募集する。 https://example.com/rfi.html"
+        assert self.tag_names(message) == []
+
+        assert self.tag_names("RFI#1 and WG#2") == []
+        assert self.tag_names("多言語の#日本語タグ") == []
+
+    def test_tag_needs_more_than_digits_and_punctuation(self):
+        assert self.tag_names("Read #1 today") == []
+        assert self.tag_names("Wait #... really") == []
+        assert self.tag_names("Ticket #1a here") == ['#1a']
+
+    def test_trailing_punctuation_is_stripped(self):
+        assert self.tag_names("A #tag. B") == ['#tag']
+        assert self.tag_names("A #a.b here") == ['#a.b']
+
+    def test_tag_at_start_and_after_newline(self):
+        assert self.tag_names("#start of text") == ['#start']
+        assert self.tag_names("line1\n#newline tag") == ['#newline']
+
+    def test_fullwidth_hash_is_a_tag(self):
+        assert self.tag_names("＃全角タグ です") == ['＃全角タグ']
+
+    def test_url_fragment_is_not_a_tag(self):
+        assert self.tag_names("See https://example.com/page#fragment now") == []
+
+    def test_over_long_tag_is_skipped(self):
+        """Tags over the 64-grapheme limit stay plain text instead of failing the post"""
+        assert self.tag_names('#' + 'あ' * 64 + ' ok') == ['#' + 'あ' * 64]
+        assert self.tag_names('#' + 'あ' * 65 + ' too long') == []
+
+    def test_positions_match_the_tag_text(self):
+        message = "先頭 #タグ と #another です"
+        for item in get_tags(message).values():
+            name = item['name']
+            assert message[item['start']:item['end']] == name
+            assert message.encode('utf-8')[item['byte_start']:item['byte_end']].decode('utf-8') == name
+
+
 class TestPostNewOptions:
     """Tests for langs, image alt text, video, and reply/quote controls."""
 
