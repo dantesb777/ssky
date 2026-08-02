@@ -13,8 +13,10 @@ dependencies = [
     "beautifulsoup4 (>=4.12.3,<5.0.0)",
     "requests (>=2.32.3,<3.0.0)",
     "atproto (>=0.0.68,<0.0.69)",
-    "fastmcp (>=2.14.0,<3.0.0)",
 ]
+
+[project.optional-dependencies]
+mcp = ["fastmcp (>=2.14.0,<3.0.0)"]
 
 [project.urls]
 homepage = "https://github.com/simpleskyclient/ssky"

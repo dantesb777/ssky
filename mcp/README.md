@@ -2,6 +2,25 @@
 
 MCP (Model Context Protocol) server for the ssky Bluesky client.
 
+## Running the server
+
+The server is a Python process that speaks MCP over stdio. The primary way to run it is
+to install the optional extra and let the MCP client launch it:
+
+```bash
+pip install 'ssky[mcp]'
+ssky-mcp-server
+```
+
+`mcp/mcp.sample.json` configures this via `uvx`, which needs no permanent install.
+A plain `pip install ssky` does **not** include the MCP server; `ssky-mcp-server` will
+tell you to install `ssky[mcp]` if the extra is missing.
+
+Docker (below) is a secondary option for environments where a Python install is
+inconvenient. Note that the container cannot see the host filesystem, so posting images
+requires a volume mount (see `mcp.docker.sample.json`) — the Python install has no such
+restriction.
+
 ## Building Docker Images
 
 This directory contains scripts and Dockerfiles for building the ssky MCP server as a Docker image.

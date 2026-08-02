@@ -20,6 +20,13 @@ A lightweight, command-line Bluesky client that makes it easy to interact with t
 pip install ssky
 ```
 
+This installs the CLI and nothing else. If you also want the MCP server for IDE
+integration, install the optional extra instead:
+
+```bash
+pip install 'ssky[mcp]'
+```
+
 ### Login
 
 ```bash
@@ -243,7 +250,10 @@ ssky get --output ./timeline
 
 **Quick Setup:**
 ```bash
-# For new MCP setup: copy sample configuration (no build required!)
+# Install ssky with the MCP extra
+pip install 'ssky[mcp]'
+
+# Copy the sample configuration
 mkdir -p .cursor
 cp mcp/mcp.sample.json .cursor/mcp.json
 
@@ -253,11 +263,16 @@ export SSKY_USER=your-handle.bsky.social:your-password
 # Restart Cursor to load the MCP tools
 ```
 
-✨ **Docker will automatically pull the pre-built image on first use!**
+The MCP server is a Python process that runs over stdio, so `uvx` works without
+installing anything permanently — see `mcp/mcp.sample.json`.
 
-**Advanced Setup:**
-- **For existing MCP setup**: Add ssky server to your `.cursor/mcp.json` (see `mcp/mcp.sample.json`)
-- **For local development**: Use `cd mcp && ./build.sh && cd ..` to build locally
+**Alternative Setup:**
+- **Docker**: `cp mcp/mcp.docker.sample.json .cursor/mcp.json` uses the pre-built
+  `ghcr.io/simpleskyclient/ssky-mcp` image, which is pulled automatically on first use.
+  Useful if you would rather not have a Python environment involved.
+- **For existing MCP setup**: Add the ssky server to your `.cursor/mcp.json` (see the
+  sample files above)
+- **For local development**: Use `cd mcp && ./build.sh && cd ..` to build the image locally
 - **Complete guide**: See [MCP Documentation](mcp/SSKY_MCP_GUIDE.md)
 
 **Available Tools:**

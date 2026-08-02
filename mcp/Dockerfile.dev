@@ -23,8 +23,9 @@ WORKDIR /app/ssky-source
 # Configure Poetry to not create virtual environment (we're in a container)
 RUN poetry config virtualenvs.create false
 
-# Install dependencies and the local ssky package (including the project itself)
-RUN poetry install
+# Install dependencies and the local ssky package (including the project itself).
+# fastmcp lives in the optional "mcp" extra, so it must be requested explicitly.
+RUN poetry install --extras mcp
 
 # Debug: Check where ssky might be installed
 RUN echo "PATH: $PATH"
@@ -36,7 +37,7 @@ RUN ls -la /root/.local/bin/ 2>/dev/null || echo "/root/.local/bin/ not found"
 RUN which ssky || echo "ssky command not found in PATH"
 RUN ssky --help || echo "ssky command failed"
 
-# MCP dependencies are already installed via poetry (fastmcp)
+# MCP dependencies are already installed via poetry (the "mcp" extra)
 
 # Set working directory back to /app and use the installed package
 WORKDIR /app
