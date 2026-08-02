@@ -103,6 +103,24 @@ with `ensure_ascii=False` and `separators=(',', ':')` — no spaces, non-ASCII e
 atproto model per line via `models.utils.get_model_as_json()`, with upstream's camelCase
 key names, and follows upstream's schema — not ours.
 
+### 4.2 Why the two JSON formats differ
+
+The asymmetry is deliberate. They serve different consumers and should not be made to
+converge:
+
+- **`-J` is a passthrough for pipelines.** One upstream record per line, produced by
+  looping and printing, which is line-delimited JSON by construction. It streams, composes
+  with `head` / `jq` / `while read`, and carries no ssky-owned framing — which is also why
+  its stability follows upstream's, not ours.
+- **`-S` is ssky's own format, and the envelope is the point.** It is what the MCP server
+  passes to a model, and a single object is what an MCP tool returns. `status`,
+  `http_code`, and `message` are context the model can reason about — "this succeeded and
+  returned nothing" is a different signal from "this failed" — and that context would be
+  lost in a bare stream of records.
+
+So `-J` is the pipe format and `-S` is the agent format. Neither should grow the other's
+framing.
+
 ## 5. Per-format detail
 
 ### 5.1 `PostDataList`
@@ -312,17 +330,16 @@ deltas to work through.
 
 | # | Divergence | Intended | Tracked by |
 | --- | --- | --- | --- |
-| 1 | `-J` on lists is line-delimited with no envelope; `-S` is a single buffered envelope | one streaming shape, consistently applied | #78, #79 |
-| 2 | `--thread` refuses `-J`/`-S` | structured output for threads | #80, #81 |
-| 3 | Errors go to stdout under `-J`/`-S` | payload-only stdout, or an explicit documented exception | #83 |
-| 4 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | one documented code | #82, #84 |
-| 5 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
-| 6 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
-| 7 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |
-| 8 | `DryRunResult` inverts the convention: `-S` bare and lossy, `-J` enveloped | `-S` enveloped like every other type | #94 |
-| 9 | `SuccessResult` ignores `-I`/`-T`/`-L`, so `ssky delete <uri> -I` prints prose instead of the URI | `-I` yields the affected identifier | #95 |
-| 10 | `-O` creates the directory for threads but not for posts or profiles | create it in all cases, or fail the same way in all cases | #96 |
-| 11 | Dead branch: `ThreadData._print_to_stdout` tests `format in ('long','text')` inside the branch that only runs for `''` and `'id'` | remove, or restore the intended separator | #96 |
+| 1 | `--thread` refuses `-J`/`-S` | structured output for threads | #80, #81 |
+| 2 | Errors go to stdout under `-J`/`-S` | payload-only stdout, or an explicit documented exception | #83 |
+| 3 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | one documented code | #82, #84 |
+| 4 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
+| 5 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
+| 6 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |
+| 7 | `DryRunResult` inverts the convention: `-S` bare and lossy, `-J` enveloped | `-S` enveloped like every other type | #94 |
+| 8 | `SuccessResult` ignores `-I`/`-T`/`-L`, so `ssky delete <uri> -I` prints prose instead of the URI | `-I` yields the affected identifier | #95 |
+| 9 | `-O` creates the directory for threads but not for posts or profiles | create it in all cases, or fail the same way in all cases | #96 |
+| 10 | Dead branch: `ThreadData._print_to_stdout` tests `format in ('long','text')` inside the branch that only runs for `''` and `'id'` | remove, or restore the intended separator | #96 |
 
 Two further notes that are documentation rather than code:
 
