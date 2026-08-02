@@ -82,8 +82,8 @@ preserve it via `conftest.py`).
 
 - **Commit messages: single-line summary only.** No body, no emoji, no
   "Generated with Claude Code" / "Co-Authored-By" footers.
-- **Repositories**: upstream is `simpleskyclient/ssky`; `mkyutani/ssky` is the dev fork.
-  File **issues** and **PRs** against upstream (push to fork first). Confirm repo
+- **Repository**: `simpleskyclient/ssky`, the `origin` remote — there is no fork. Push
+  topic branches straight to it and open **issues** and **PRs** there. Confirm repo
   ownership before any GitHub operation.
 - **Releasing is automated, not manual.** Bump `version` in `pyproject.toml`, then push
   a `v*` tag to upstream — the `release.yml` GitHub Actions workflow handles PyPI publish,
