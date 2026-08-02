@@ -1,5 +1,6 @@
 import re
 import sys
+import unicodedata
 from atproto import DidInMemoryCache, IdResolver, models
 import atproto_client
 from bs4 import BeautifulSoup
@@ -226,8 +227,53 @@ def search_items(text, pattern, property_name):
 def get_links(message):
     return search_items(message, r'https?://[\w/:%#\$&\?\(\)~\.=\+\-]+', 'uri')
 
+# Hashtag detection mirrors the reference implementation in @atproto/api
+# (rich-text/util.ts TAG_REGEX): the '#' must start the text or follow
+# whitespace, the tag body must contain at least one character that is neither a
+# digit nor punctuation, and trailing punctuation is dropped. A bare r'#\S+'
+# turns a mid-word '#' ("RFI#1") into a tag that runs to the next whitespace,
+# which in languages without spaces between words swallows the rest of the
+# sentence and exceeds the 64-grapheme limit of app.bsky.feed.post.
+TAG_ZERO_WIDTH_CHARS = '\u00ad\u2060\u200a\u200b\u200c\u200d\u20e2'
+TAG_VARIATION_SELECTOR = '\ufe0f'
+TAG_MAX_GRAPHEMES = 64
+TAG_PATTERN = re.compile(f'(?:^|(?<=\\s))[#\uff03][^\\s{TAG_ZERO_WIDTH_CHARS}]*')
+
+def is_tag_punctuation(char):
+    return unicodedata.category(char).startswith('P')
+
 def get_tags(message):
-    return search_items(message, r'#\S+', 'name')
+    items = {}
+    for m in TAG_PATTERN.finditer(message):
+        # Emoji modifier right after the '#' never starts a tag
+        body = m.group()[1:]
+        if body.startswith(TAG_VARIATION_SELECTOR):
+            continue
+
+        while body and is_tag_punctuation(body[-1]):
+            body = body[:-1]
+
+        # A tag made only of digits and punctuation ("#1", "#...") is not a tag
+        if not any(not ('0' <= c <= '9') and not is_tag_punctuation(c) for c in body):
+            continue
+
+        # A grapheme cluster is never shorter than one code point, so this is a
+        # conservative form of the server-side 64-grapheme check; over-long tags
+        # stay plain text instead of getting the whole post rejected.
+        if len(body) > TAG_MAX_GRAPHEMES:
+            continue
+
+        start = m.start()
+        end = start + 1 + len(body)
+        byte_start = byte_len(message[:start])
+        items[f'{start:05d}'] = {
+            'byte_start': byte_start,
+            'byte_end': byte_start + byte_len(message[start:end]),
+            'start': start,
+            'end': end,
+            'name': message[start:end]
+        }
+    return items
 
 def get_mentions(message):
     mentions = search_items(message, r'@[\w.]+', 'handle')
