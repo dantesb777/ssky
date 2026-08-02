@@ -13,10 +13,23 @@ The MCP server provides **10 comprehensive tools** for Bluesky interaction:
 ## Setup
 
 ### 1. Requirements
-Before starting, ensure you have the following installed:
 
-#### Docker
-Docker is required to run the MCP server. Install Docker for your platform:
+#### Python Package
+The MCP server ships as an optional extra of the `ssky` package. Install it with:
+```bash
+pip install 'ssky[mcp]'
+```
+
+A plain `pip install ssky` gives you the CLI only — `ssky-mcp-server` will tell you to
+install the extra if it is missing.
+
+If you use [`uv`](https://docs.astral.sh/uv/), nothing needs to be installed permanently;
+`uvx --from 'ssky[mcp]' ssky-mcp-server` fetches it on demand, and that is what the sample
+configuration does.
+
+#### Docker (optional)
+Only needed if you choose the Docker setup below instead of the Python one. Install Docker
+for your platform:
 - **Linux**: Follow the [official Docker installation guide](https://docs.docker.com/engine/install/)
 - **macOS**: Download [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)
 - **Windows**: Download [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/)
@@ -25,12 +38,6 @@ After installation, verify Docker is running:
 ```bash
 docker --version
 docker info
-```
-
-#### Python Package
-Ensure the `ssky` package is installed and available in your PATH:
-```bash
-pip install ssky
 ```
 
 ### 2. Configure Bluesky Authentication
@@ -52,8 +59,12 @@ Create a `.env` file in your project root:
 SSKY_USER=your-handle.bsky.social:your-password
 ```
 
-### 2.1. Configure Image Directory (Optional)
-To enable image posting functionality, the default configuration uses `~/Pictures` directory.
+### 2.1. Configure Image Directory (Docker setup only)
+With the Python setup the server runs as your own user and can read image paths directly —
+pass a normal host path and skip this section.
+
+The Docker container cannot see your filesystem, so images have to be mounted in. The
+sample Docker configuration mounts `~/Pictures`.
 
 #### Setup
 1. Create the Pictures directory if it doesn't exist:
@@ -92,8 +103,8 @@ If you want to use a different directory, modify the volume mount in your MCP co
 
 ### 3. Configure Cursor
 
-#### Option A: Quick Setup (Recommended - No build required)
-If you don't have an existing `.cursor/mcp.json` file, this is the simplest approach using the pre-built Docker image:
+#### Option A: Quick Setup (Recommended)
+If you don't have an existing `.cursor/mcp.json` file, this is the simplest approach:
 
 1. **Copy the sample configuration:**
    ```bash
@@ -106,9 +117,24 @@ If you don't have an existing `.cursor/mcp.json` file, this is the simplest appr
 
 2. **Restart Cursor** to load the MCP tools
 
-✅ **That's it!** Docker will automatically pull the pre-built image (`ghcr.io/simpleskyclient/ssky-mcp:latest`) when first used.
+✅ **That's it!** The configuration runs `uvx --from 'ssky[mcp]' ssky-mcp-server`, so there
+is nothing to build and nothing to install permanently. If you would rather install it,
+`pip install 'ssky[mcp]'` and set `"command": "ssky-mcp-server"` with no `args`.
 
-💡 **Note:** The first use may take a moment for Docker to pull the image (~276MB).
+#### Option B: Docker Setup
+Use this if you would rather not have a Python environment involved. It uses the pre-built
+image, which Docker pulls automatically on first use (~276MB).
+
+1. **Copy the Docker sample configuration:**
+   ```bash
+   mkdir -p .cursor
+   cp mcp/mcp.docker.sample.json .cursor/mcp.json
+   ```
+
+2. **Restart Cursor** to load the MCP tools
+
+Remember that the container cannot see your filesystem: posting images requires the volume
+mount described in section 2.1.
 
 **Available Docker Images:**
 - `ghcr.io/simpleskyclient/ssky-mcp:latest` - Latest stable version (auto-built from main branch)
@@ -116,7 +142,7 @@ If you don't have an existing `.cursor/mcp.json` file, this is the simplest appr
 - **Source**: [GitHub Container Registry](https://github.com/simpleskyclient/ssky-mcp/pkgs/container/ssky-mcp)
 - **CI/CD**: Automatically built via [GitHub Actions](https://github.com/simpleskyclient/ssky/actions)
 
-#### Option B: Add to Existing MCP Configuration
+#### Option C: Add to Existing MCP Configuration
 If you already have `.cursor/mcp.json` with other MCP servers (e.g., GitHub):
 
 1. **Back up your existing configuration:**
@@ -134,25 +160,23 @@ If you already have `.cursor/mcp.json` with other MCP servers (e.g., GitHub):
                // ... your existing configuration
            },
            "ssky": {
-               "command": "docker",
+               "command": "uvx",
                "args": [
-                   "run",
-                   "-i",
-                   "--rm",
-                   "-e",
-                   "SSKY_USER",
-                   "ghcr.io/simpleskyclient/ssky-mcp:latest"
+                   "--from",
+                   "ssky[mcp]",
+                   "ssky-mcp-server"
                ]
            }
        }
    }
    ```
    
-   💡 **Tip:** You can copy the exact configuration from `mcp/mcp.sample.json`
+   💡 **Tip:** You can copy the exact configuration from `mcp/mcp.sample.json`, or from
+   `mcp/mcp.docker.sample.json` for the Docker form.
 
 3. **Restart Cursor** to reload the configuration
 
-#### Option C: Local Build (For Developers)
+#### Option D: Local Build (For Developers)
 If you prefer to build the Docker image locally or need to modify the MCP server:
 
 1. **Build the Docker image:**
@@ -174,7 +198,7 @@ If you prefer to build the Docker image locally or need to modify the MCP server
    mkdir -p .cursor
    
    # Copy and modify for local image
-   sed 's|ghcr.io/simpleskyclient/ssky-mcp:latest|ssky-mcp:latest|' mcp/mcp.sample.json > .cursor/mcp.json
+   sed 's|ghcr.io/simpleskyclient/ssky-mcp:latest|ssky-mcp:latest|' mcp/mcp.docker.sample.json > .cursor/mcp.json
    ```
 
 3. **Restart Cursor** to load the MCP tools
@@ -451,30 +475,35 @@ ssky_post(
 
 ## Troubleshooting
 
-1. **Docker not found**: Ensure Docker is installed and running
+1. **`ssky-mcp-server requires the optional MCP dependencies`**: the `mcp` extra is not
+   installed
+   - Install: `pip install 'ssky[mcp]'`
+   - Verify: `ssky-mcp-server --version`
+
+2. **Docker not found** (Docker setup only): Ensure Docker is installed and running
    - Install Docker from [official website](https://docs.docker.com/get-docker/)
    - Start Docker service: `sudo systemctl start docker` (Linux) or start Docker Desktop
    - Verify: `docker --version` and `docker info`
 
-2. **Command not found**: Ensure `ssky` is installed and in your PATH
-   - Install: `pip install ssky`
+3. **Command not found**: Ensure `ssky` is installed and in your PATH
+   - Install: `pip install 'ssky[mcp]'`
    - Verify: `ssky --help`
 
-3. **Authentication failed**: Check your credentials and network connection
+4. **Authentication failed**: Check your credentials and network connection
    - Verify credentials: `ssky login your-handle.bsky.social:your-password`
    - Check environment variable: `echo $SSKY_USER`
 
-4. **Docker build failed**: Check Docker daemon and permissions
+5. **Docker build failed**: Check Docker daemon and permissions
    - Ensure Docker daemon is running
    - Check user permissions for Docker (may need `sudo` or add user to docker group)
 
-5. **Permission denied**: Ensure proper file permissions
+6. **Permission denied**: Ensure proper file permissions
    - Make build script executable: `chmod +x mcp/build.sh`
 
-6. **Timeout errors**: Operations have a 30-second timeout; network issues may cause delays
+7. **Timeout errors**: Operations have a 30-second timeout; network issues may cause delays
 
-7. **MCP connection issues**: Restart Cursor to reload the MCP server configuration
-   - Verify Docker image exists: `docker images | grep ssky-mcp`
+8. **MCP connection issues**: Restart Cursor to reload the MCP server configuration
+   - Verify Docker image exists (Docker setup only): `docker images | grep ssky-mcp`
    - Check `.cursor/mcp.json` configuration format
 
 ## Advanced Usage

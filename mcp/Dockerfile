@@ -23,8 +23,9 @@ WORKDIR /app/ssky-source
 # Configure Poetry to not create virtual environment (we're in a container)
 RUN poetry config virtualenvs.create false
 
-# Install dependencies and the local ssky package (including the project itself)
-RUN poetry install
+# Install dependencies and the local ssky package (including the project itself).
+# fastmcp lives in the optional "mcp" extra, so it must be requested explicitly.
+RUN poetry install --extras mcp
 
 # Set working directory back to /app and use the installed package
 WORKDIR /app

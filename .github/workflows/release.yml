@@ -97,8 +97,13 @@ jobs:
         \`\`\`bash
         pip install ssky==$VERSION
         \`\`\`
-        
-        ### Docker
+
+        The MCP server for IDE integration is an optional extra:
+        \`\`\`bash
+        pip install 'ssky[mcp]==$VERSION'
+        \`\`\`
+
+        ### MCP server via Docker (alternative)
         \`\`\`bash
         docker pull ghcr.io/simpleskyclient/ssky-mcp:$VERSION
         \`\`\`

@@ -24,7 +24,7 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "poetry install && echo '\n# Auto-activate Poetry virtual environment for ssky project\nif [ -d \"/workspaces/ssky/.venv\" ]; then\n    source /workspaces/ssky/.venv/bin/activate\nfi' >> ~/.bashrc",
+	"postCreateCommand": "poetry install --extras mcp && echo '\n# Auto-activate Poetry virtual environment for ssky project\nif [ -d \"/workspaces/ssky/.venv\" ]; then\n    source /workspaces/ssky/.venv/bin/activate\nfi' >> ~/.bashrc",
 
 	// Configure tool-specific properties.
 	"customizations": {

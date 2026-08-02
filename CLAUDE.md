@@ -8,14 +8,17 @@ ssky is a lightweight command-line Bluesky client. It ships:
 - The `ssky` CLI for posting, searching, and managing Bluesky content (images, quotes, replies, rich text)
 - An MCP server (`src/ssky_mcp/`) for IDE integration
 
-Requires Python 3.12+. Uses Poetry. Key deps: `atproto`, `beautifulsoup4`, `requests`, `fastmcp` (see `pyproject.toml`).
+Requires Python 3.12+. Uses Poetry. Key deps: `atproto`, `beautifulsoup4`, `requests`.
+`fastmcp` is an **optional extra** (`ssky[mcp]`), not a core dependency — a plain
+`pip install ssky` must never pull it (see `pyproject.toml`).
 
 ## Commands
 
 **Always prefix Python/tool commands with `poetry run`** to use the correct venv.
 
 ```bash
-poetry install                                   # install deps
+poetry install --extras mcp                      # install deps (incl. the MCP server)
+poetry install                                   # CLI deps only, as end users get them
 poetry run pytest --tb=short                     # run tests
 poetry run pytest tests/test_login.py -v         # single file
 SSKY_SKIP_REAL_API_TESTS=1 poetry run pytest     # skip real Bluesky API calls
@@ -53,7 +56,15 @@ method. Output formats: `id` (-I), `json` (-J), `long` (-L), `simple_json` (-S),
 ### MCP server (`src/ssky_mcp/server.py`)
 FastMCP server. **Each tool shells out to the `ssky` CLI via `subprocess`**, not Python
 imports — so CLI and MCP behavior are guaranteed identical and a CLI fix is inherited
-automatically. Deployed via Docker (`mcp/`).
+automatically. Do not refactor this into library imports.
+
+Runs over stdio from `pip install 'ssky[mcp]'` (or `uvx`); the Docker image in `mcp/` is a
+secondary path. `fastmcp` is imported through `require_fastmcp()`, which exits with an
+install hint rather than an `ImportError` when the extra is absent.
+
+**Policy: no new MCP tools.** The 10 existing tools are the steady state; MCP capability
+follows the CLI, so improvements belong in the CLI and are inherited for free. Do not add
+MCP-specific features.
 
 ### Authentication
 `ssky_client()` resolves auth in order: session file `~/.ssky` (persisted

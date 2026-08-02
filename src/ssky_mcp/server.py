@@ -8,10 +8,30 @@ import logging
 import subprocess
 import sys
 from importlib.metadata import version, PackageNotFoundError
-from fastmcp import FastMCP
 
 # Import ssky utilities (now we can import directly!)
 from ssky.util import create_success_response, create_error_response
+
+def require_fastmcp():
+    """Return the FastMCP class, or exit with an actionable message if the extra is missing.
+
+    fastmcp is an optional dependency: plain `pip install ssky` gives the CLI only.
+    Without this guard the entry point would fail with a bare ImportError traceback,
+    which does not tell the user what to do about it.
+    """
+    try:
+        from fastmcp import FastMCP
+    except ModuleNotFoundError as e:
+        if e.name != "fastmcp":
+            raise
+        sys.stderr.write(
+            "ssky-mcp-server requires the optional MCP dependencies, which are not installed.\n"
+            "Install them with:\n"
+            "\n"
+            "    pip install 'ssky[mcp]'\n"
+        )
+        raise SystemExit(1) from None
+    return FastMCP
 
 # Set logging level to WARNING and above for stderr output
 logging.basicConfig(level=logging.WARNING, stream=sys.stderr)
@@ -28,7 +48,7 @@ logging.getLogger("FastMCP.fastmcp.server.server").setLevel(logging.WARNING)
 logger = logging.getLogger("ssky_mcp_server")
 
 # Create FastMCP server
-mcp = FastMCP("ssky")
+mcp = require_fastmcp()("ssky")
 
 # Set the MCP server version (same as ssky package)
 def get_mcp_server_version():
