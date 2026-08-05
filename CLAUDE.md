@@ -101,6 +101,13 @@ preserve it via `conftest.py`).
 - **Repository**: `simpleskyclient/ssky`, the `origin` remote — there is no fork. Push
   topic branches straight to it and open **issues** and **PRs** there. Confirm repo
   ownership before any GitHub operation.
+- **Check an issue is unclaimed before working it.** Look at both the issue comments and
+  open PRs referencing it (`gh pr list --search <issue>`) — an open PR is a claim even
+  with no comment. The `claimed` label flags taken issues, but the comments are the
+  record. **The assignee field proves nothing**: GitHub only allows assigning users with
+  repo access, so outside contributors are not assignable and a claimed issue still shows
+  no assignee. When someone volunteers, reply promptly to confirm and add `claimed`.
+  `CONTRIBUTING.md` states this contract for contributors.
 - **Releasing is automated, not manual.** Bump `version` in `pyproject.toml`, then push
   a `v*` tag to upstream — the `release.yml` GitHub Actions workflow handles PyPI publish,
   Docker image push to ghcr, and the GitHub Release. Don't run `poetry publish` by hand.
