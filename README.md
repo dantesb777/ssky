@@ -287,50 +287,13 @@ installing anything permanently — see `mcp/mcp.sample.json`.
 
 📖 **[Complete MCP Documentation](mcp/SSKY_MCP_GUIDE.md)**
 
-## 🧪 Development with Dev Container
+## 🤝 Contributing
 
-For development using VS Code Dev Containers:
+Contributions are welcome. **[CONTRIBUTING.md](CONTRIBUTING.md)** covers development
+setup, the Dev Container, running the tests, and how to open a pull request.
 
-1. Copy the environment configuration file and set your Bluesky credentials:
-   ```bash
-   cp .env.local.sample .env.local
-   ```
-   Edit `.env.local` and add your Bluesky handle and password:
-   ```bash
-   SSKY_USER=your-handle.bsky.social:your-password
-   SSKY_SKIP_REAL_API_TESTS=1
-   ```
-
-2. The dev container automatically:
-   - Loads environment variables from `.env.local`
-   - Installs Claude Code extension
-   - Sets up Python 3.14 environment with Docker support
-
-## 🧪 Testing
-
-To run the tests in the `tests/` directory:
-
-1. Copy the environment configuration file and set your Bluesky credentials:
-   ```bash
-   cp tests/_env tests/.env
-   ```
-   Edit `tests/.env` and add your Bluesky handle and password.
-
-2. Run tests using pytest:
-   ```bash
-   # Run all tests
-   pytest tests/ -v
-
-   # Run individual feature tests
-   pytest tests/test_login.py -v              # Login functionality
-   pytest tests/test_post_and_delete.py -v    # Post and delete operations
-   pytest tests/test_search.py -v             # Search functionality
-   pytest tests/test_follow_unfollow.py -v    # Follow/unfollow operations
-   pytest tests/test_get.py -v                # Timeline retrieval
-   pytest tests/test_profile.py -v            # Profile display
-   pytest tests/test_repost_unrepost.py -v    # Repost/unrepost operations
-   pytest tests/test_user.py -v               # User functionality
-   ```
+Please read the claiming convention there before you start work: comment on an issue to
+claim it, and check whether an open pull request already references it.
 
 ## 📝 Requirements
 
