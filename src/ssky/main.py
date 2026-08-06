@@ -138,15 +138,15 @@ def execute(subcommand, args) -> bool:
         return False
     except BrokenPipeError:
         # Quiet exit for environments where SIGPIPE is not delivered as a
-        # signal (for example when stdout is a TextIOWrapper). Convention:
-        # 128 + SIGPIPE (typically 141).
+        # signal (for example when stdout is a TextIOWrapper). Redirect
+        # stdout so interpreter shutdown flush cannot re-raise, then let
+        # main() turn the error into 128 + SIGPIPE (typically 141).
         try:
             devnull = os.open(os.devnull, os.O_WRONLY)
             os.dup2(devnull, sys.stdout.fileno())
-        except Exception:
+        except OSError:
             pass
-        code = 128 + int(getattr(signal, "SIGPIPE", 13))
-        raise SystemExit(code)
+        raise
     except Exception as e:
         print(str(e), file=sys.stderr)
         return False

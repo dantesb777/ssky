@@ -13,13 +13,27 @@ from ssky import main as main_mod
 
 
 def test_setup_restores_sigpipe_default():
+    """Run setup() in a subprocess so it cannot swap this process's stdio."""
     if not hasattr(signal, "SIGPIPE"):
         pytest.skip("SIGPIPE not available on this platform")
-    main_mod.setup()
-    assert signal.getsignal(signal.SIGPIPE) == signal.SIG_DFL
+
+    code = (
+        "import signal\n"
+        "from ssky.main import setup\n"
+        "signal.signal(signal.SIGPIPE, signal.SIG_IGN)\n"
+        "setup()\n"
+        "assert signal.getsignal(signal.SIGPIPE) == signal.SIG_DFL\n"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr
 
 
-def test_execute_broken_pipe_exits_with_sigpipe_code():
+def test_execute_broken_pipe_reraise_after_dup2():
     args = MagicMock()
     args.format = "id"
     args.output = None
@@ -32,10 +46,18 @@ def test_execute_broken_pipe_exits_with_sigpipe_code():
         mod = MagicMock()
         mod.get = _raise
         imp.return_value = mod
-        with pytest.raises(SystemExit) as ei:
+        with pytest.raises(BrokenPipeError):
             main_mod.execute("get", args)
+
+
+def test_main_broken_pipe_returns_sigpipe_code():
     expected = 128 + int(getattr(signal, "SIGPIPE", 13))
-    assert ei.value.code == expected
+    with (
+        patch("ssky.main.parse", return_value=("get", MagicMock())),
+        patch("ssky.main.execute", side_effect=BrokenPipeError()),
+        patch("ssky.main.setup"),
+    ):
+        assert main_mod.main() == expected
 
 
 def test_pipe_to_early_consumer_has_empty_stderr():
