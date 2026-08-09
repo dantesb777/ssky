@@ -334,14 +334,13 @@ deltas to work through.
 | --- | --- | --- | --- |
 | 1 | `--thread` refuses `-J`/`-S` | structured output for threads | #80, #81 |
 | 2 | Errors go to stdout under `-J`/`-S` | payload-only stdout, or an explicit documented exception | #83 |
-| 3 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | exit `128+SIGPIPE` (typically 141), no traceback | #84 |
-| 4 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
-| 5 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
-| 6 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |
-| 7 | `DryRunResult` inverts the convention: `-S` bare and lossy, `-J` enveloped | `-S` enveloped like every other type | #94 |
-| 8 | `SuccessResult` ignores `-I`/`-T`/`-L`, so `ssky delete <uri> -I` prints prose instead of the URI | `-I` yields the affected identifier | #95 |
-| 9 | `-O` creates the directory for threads but not for posts or profiles | create it in all cases, or fail the same way in all cases | #96 |
-| 10 | Dead branch: `ThreadData._print_to_stdout` tests `format in ('long','text')` inside the branch that only runs for `''` and `'id'` | remove, or restore the intended separator | #96 |
+| 3 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
+| 4 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
+| 5 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |
+| 6 | `DryRunResult` inverts the convention: `-S` bare and lossy, `-J` enveloped | `-S` enveloped like every other type | #94 |
+| 7 | `SuccessResult` ignores `-I`/`-T`/`-L`, so `ssky delete <uri> -I` prints prose instead of the URI | `-I` yields the affected identifier | #95 |
+| 8 | `-O` creates the directory for threads but not for posts or profiles | create it in all cases, or fail the same way in all cases | #96 |
+| 9 | Dead branch: `ThreadData._print_to_stdout` tests `format in ('long','text')` inside the branch that only runs for `''` and `'id'` | remove, or restore the intended separator | #96 |
 
 Two further notes that are documentation rather than code:
 

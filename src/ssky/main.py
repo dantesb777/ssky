@@ -176,9 +176,17 @@ def main() -> int:
         status = execute(subcommand, args)
         return 0 if status is True else 1
     except BrokenPipeError:
+        # Quiet exit when BrokenPipeError surfaces from parse() (no execute
+        # dup2 yet) or after execute() re-raises. Narrow to OSError so we do
+        # not mask unrelated failures while still covering close failures.
+        try:
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+        except OSError:
+            pass
         try:
             sys.stdout.close()
-        except Exception:
+        except OSError:
             pass
         return 128 + int(getattr(signal, "SIGPIPE", 13))
 
