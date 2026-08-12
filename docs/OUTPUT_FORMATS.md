@@ -336,6 +336,7 @@ deltas to work through.
 | 3 | SIGPIPE exit code varies with payload size (0 for small, 1 for large) | one documented code | #82, #84 |
 | 4 | A custom delimiter is not escaped in Short; `-D ,` on a display name containing `,` produces an unparseable line | specified escaping, or a NUL-delimited mode | #85 |
 | 5 | An absent `display_name` yields an empty field, so a space-delimited Short line silently loses a column | a placeholder, or a documented rule | #85 |
+| 6 | `PostDataList` envelope message reads `Posted N item(s)` even for `get` and `search` | wording that matches the operation | #93 |
 | 7 | `DryRunResult` inverts the convention: `-S` bare and lossy, `-J` enveloped | `-S` enveloped like every other type | #94 |
 | 8 | `SuccessResult` ignores `-I`/`-T`/`-L`, so `ssky delete <uri> -I` prints prose instead of the URI | `-I` yields the affected identifier | #95 |
 | 9 | `-O` creates the directory for threads but not for posts or profiles | create it in all cases, or fail the same way in all cases | #96 |
